@@ -1,10 +1,11 @@
 from Tetris.tetris import Tetris
 from Tetris.global_variables import ROTATE_KEY, RIGHT_KEY, LEFT_KEY, DOWN_KEY
 import utils
+from copy import deepcopy
 
 class DFS:
-    def __init__(self, t):
-        pass
+    def __init__(self, t: Tetris):
+        self.T = t
     
     def dfs(self, s):
         visited = [False for i in range(self.V)]
@@ -24,9 +25,18 @@ class DFS:
                     stack.append(node)
 
     def possible_moves(self, p):
-        pass
+        grid_copy = deepcopy(self.T.grid)
+        # por cada rotacion de la piza
+        for i in self.T.current_piece.shape:
+            pass
+
     
     def best_move(serlf, m):
         pass
+        # calcular puntaje por cada jugada
+
+        # ordenarlos de menor a mayor
+
+        # retornar jugada con mejor puntaje
 
 

@@ -3,6 +3,7 @@ import pygame
 # import global variable for the game scope
 from Tetris.global_variables import *
 from dfs import DFS
+from Tetris.tetris import Tetris
 
 # initialize pygame module
 pygame.init()
