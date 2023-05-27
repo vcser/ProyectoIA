@@ -8,9 +8,9 @@
 """
 
 # width of game screen
-SCREEN_WIDTH = 800
+SCREEN_WIDTH = 850
 # height of game screen
-SCREEN_HEIGHT = 650
+SCREEN_HEIGHT = 700
 # pixel size of each block
 BLOCK_SIZE = 30
 

@@ -60,7 +60,7 @@ class Tetris:
 		# variable indicate the speed of the block and to indicate the motion of falling pieces
 		self.fall_time = 0
 		# variable that caps the max fall time
-		self.fall_speed = 0.27
+		self.fall_speed = 0.6		# ORIGINAL = 0.27
 		# game window surface
 		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
