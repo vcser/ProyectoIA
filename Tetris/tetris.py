@@ -228,7 +228,7 @@ class Tetris:
 				# change next_piece to current_piece
 				self.change_current_piece = True
 
-		if action is not None:
+		if action is not None:					#! IMPORTANTE
 			# if user presses LEFT_KEY
 			if action == LEFT_KEY:
 				# decrease x coordinate
