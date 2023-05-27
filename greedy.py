@@ -3,11 +3,11 @@ from Tetris.global_variables import ROTATE_KEY, RIGHT_KEY, LEFT_KEY, DOWN_KEY
 import utils
 from copy import deepcopy
 
-class DFS:
+class GREEDY:
     def __init__(self, t: Tetris):
         self.T = t
     
-    def dfs(self, s):
+    def greedy(self, s):    # En greedy solo importa que posicion es la mejor, nada mas
         visited = [False for i in range(self.V)]
         stack = []
         stack.append(s)
