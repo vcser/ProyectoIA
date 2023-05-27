@@ -7,7 +7,7 @@
 
 # import pygame module
 import pygame
-a
+
 # import global variable for the game scope
 from global_variables import *
 # import the Tetris class to be used as the main game variable
