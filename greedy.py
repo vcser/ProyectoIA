@@ -42,7 +42,8 @@ class GREEDY:
             pass
 
         elif self.T.current_piece == SHAPES_LIST[3]:  # PIEZA O
-            pass
+            for i in self.T.current_piece.shape:    # La idea es implementar este al ser el mas sencillo (1 sola rotacion)
+                pass
 
         elif self.T.current_piece == SHAPES_LIST[4]:  # PIEZA J
             pass
