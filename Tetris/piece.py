@@ -73,3 +73,9 @@ class Piece:
                     return False
         # else return true
         return True
+    
+    def get_left_bound(self):
+        for i in range(5):
+            for j in range(5):
+                if self.shape[self.rotation][j][i] == '*':
+                    return i
