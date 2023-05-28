@@ -31,7 +31,7 @@ class DFS:
             pass
 
     
-    def best_move(serlf, m):
+    def best_move(self, m):
         pass
         # calcular puntaje por cada jugada
 

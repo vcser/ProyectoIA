@@ -50,9 +50,9 @@ class Tetris:
 		# to kill game if blocks reach out the visible region
 		self.game_over = False
 		# variable to track the current piece
-		self.current_piece = Piece(5, 0, choice(SHAPES_LIST))
+		self.current_piece = Piece(5, 0, SHAPES_LIST[3])			#! CAMBIO PIEZA
 		# variable to display the next piece
-		self.next_piece = Piece(5, 0, choice(SHAPES_LIST))
+		self.next_piece = Piece(5, 0, SHAPES_LIST[3])				#! CAMBIO PIEZA
 		# variable to indicate that current piece has reached the maximum ground and next piece needs to be loaded
 		self.change_current_piece = False
 		# game clock to keep track of game ticks
@@ -60,7 +60,7 @@ class Tetris:
 		# variable indicate the speed of the block and to indicate the motion of falling pieces
 		self.fall_time = 0
 		# variable that caps the max fall time
-		self.fall_speed = 0.27
+		self.fall_speed = 0.6		# ORIGINAL = 0.27
 		# game window surface
 		self.window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
@@ -228,7 +228,7 @@ class Tetris:
 				# change next_piece to current_piece
 				self.change_current_piece = True
 
-		if action is not None:
+		if action is not None:					#! IMPORTANTE
 			# if user presses LEFT_KEY
 			if action == LEFT_KEY:
 				# decrease x coordinate
@@ -290,7 +290,7 @@ class Tetris:
 			# reassign current piece to next piece
 			self.current_piece = self.next_piece
 			# select a new next piece for next_piece variable
-			self.next_piece = Piece(5, 0, choice(SHAPES_LIST))
+			self.next_piece = Piece(5, 0, SHAPES_LIST[3])				#! CAMBIO PIEZA
 			# re-initialise change_current_piece state to False
 			self.change_current_piece = False
 			# clear rows if any full
