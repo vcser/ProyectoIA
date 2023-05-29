@@ -16,7 +16,7 @@ def calculate_possible_moves(t: Tetris):
         piece.rotation = sh
         left = 2 - piece.get_left_bound()
         # iterar desde izquierda a derecha
-        for i in range(left, 10 - width + 1):
+        for i in range(left, 10 - width):
             piece.y = 0
             piece.x = i
             while piece.in_valid_space(grid):
