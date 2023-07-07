@@ -23,7 +23,7 @@ from Tetris.tetris import Tetris
 # import global variable for the game scope
 from Tetris.global_variables import ROTATE_KEY, RIGHT_KEY, LEFT_KEY, DOWN_KEY
 # import utility function to choose the best solution
-from utils import try_possible_moves
+from utils_model import try_possible_moves
 
 # initialize pygame module
 pygame.init()
