@@ -32,7 +32,6 @@ def calculate_possible_moves(t: Tetris):
     
     # por cada rotacion de la pieza
     for sh in range(0, len(shape)):
-        print("rotacion =", sh)
         # obtener ancho de la pieza
         X = [i for (i, _) in piece.get_formatted_shape()]
         width = max(X) - min(X)
@@ -73,7 +72,7 @@ def calculate_possible_moves(t: Tetris):
             # calcular altura
             altura = 20 - piece.y
             altura = 0 if altura < 0 else altura
-            print("altura = ", altura)
+            # print("altura = ", altura)
             # altura = altura if altura > 0 else 0
             filas = clear_rows(tetris_copy)
             transiciones_filas = random.randint(0, 6)
