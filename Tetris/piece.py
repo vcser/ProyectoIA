@@ -11,9 +11,9 @@ from math import floor
 from typing import List
 
 # import global variable for the game scope
-from global_variables import *
+from Tetris.global_variables import *
 # import the list of Shapes and their respective colors
-from shapes import *
+from Tetris.shapes import *
 
 
 # template class for the current piece and next piece in the game

@@ -14,11 +14,11 @@ from typing import List, Tuple, Dict
 import pygame
 
 # import global variable for the game scope
-from global_variables import *
+from Tetris.global_variables import *
 # import the Piece class to be used as instance variables for Tetris class
-from piece import Piece
+from Tetris.piece import Piece
 # import the list of Shapes and their respective colors
-from shapes import *
+from Tetris.shapes import *
 
 
 # template class for the game
@@ -50,9 +50,9 @@ class Tetris:
 		# to kill game if blocks reach out the visible region
 		self.game_over = False
 		# variable to track the current piece
-		self.current_piece = Piece(5, 0, SHAPES_LIST[3])			#! CAMBIO PIEZA
+		self.current_piece = Piece(5, 0, choice(SHAPES_LIST))			#! CAMBIO PIEZA
 		# variable to display the next piece
-		self.next_piece = Piece(5, 0, SHAPES_LIST[3])				#! CAMBIO PIEZA
+		self.next_piece = Piece(5, 0, choice(SHAPES_LIST))				#! CAMBIO PIEZA
 		# variable to indicate that current piece has reached the maximum ground and next piece needs to be loaded
 		self.change_current_piece = False
 		# game clock to keep track of game ticks
@@ -290,7 +290,7 @@ class Tetris:
 			# reassign current piece to next piece
 			self.current_piece = self.next_piece
 			# select a new next piece for next_piece variable
-			self.next_piece = Piece(5, 0, SHAPES_LIST[3])				#! CAMBIO PIEZA
+			self.next_piece = Piece(5, 0, choice(SHAPES_LIST))				#! CAMBIO PIEZA
 			# re-initialise change_current_piece state to False
 			self.change_current_piece = False
 			# clear rows if any full
