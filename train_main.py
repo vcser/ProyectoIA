@@ -47,14 +47,16 @@ from Tetris.tetris import Tetris
 # import global variable for the game scope
 from Tetris.global_variables import ROTATE_KEY, RIGHT_KEY, LEFT_KEY, DOWN_KEY
 # import utility function to choose the best solution
-from utils_model import try_possible_moves
+from utils_model import TetrisParams
+
+from collections import deque
 
 # initialize pygame module
 pygame.init()
 # set caption of game window
 pygame.display.set_caption('Tetris')
 # load icon for game
-icon = pygame.image.load('./.images/game_logo.png')
+icon = pygame.image.load('Tetris/.images/game_logo.png')
 # set icon for the game
 pygame.display.set_icon(icon)
 
@@ -68,12 +70,6 @@ max_fitness = 0
 def main_game(genomes, config):
     
     actions = [ROTATE_KEY, RIGHT_KEY, LEFT_KEY, DOWN_KEY]
-
-    # define Neural Network Model
-    model = keras.Sequential()
-    model.add(layers.Dense(18, input_shape=(9,), activation="sigmoid"))
-    model.add(layers.Dense(9, activation="sigmoid"))
-    model.add(layers.Dense(1, activation="softmax"))
     
     t = Tetris()
     g = 1
@@ -147,12 +143,13 @@ def main_game(genomes, config):
             # remove genome instance
             gen.pop(gen.index(g))
 
+# Aqui se definen todos los parametros a utilizar
 def get_args():
     parser = argparse.ArgumentParser(
         """Implementation of Deep Q Network to play Tetris""")
-    parser.add_argument("--width", type=int, default=10, help="The common width for all images")
-    parser.add_argument("--height", type=int, default=20, help="The common height for all images")
-    parser.add_argument("--block_size", type=int, default=30, help="Size of a block")
+    #parser.add_argument("--width", type=int, default=10, help="The common width for all images")
+    #parser.add_argument("--height", type=int, default=20, help="The common height for all images")
+    #parser.add_argument("--block_size", type=int, default=30, help="Size of a block")
     parser.add_argument("--batch_size", type=int, default=512, help="The number of images per batch")
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--gamma", type=float, default=0.99)
@@ -179,12 +176,12 @@ def train(opt):
         shutil.rmtree(opt.log_path)
     os.makedirs(opt.log_path)
     writer = SummaryWriter(opt.log_path)
-    env = Tetris(width=opt.width, height=opt.height, block_size=opt.block_size)
+    env = Tetris()  # Partida de Tetris
     model = DeepQNetwork()
     optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr)
     criterion = nn.MSELoss()
 
-    state = env.reset()
+    state = TetrisParams(env.get_grid_state()).get_state()  #! Es de la instancia en ese momento
     if torch.cuda.is_available():
         model.cuda()
         state = state.cuda()
@@ -192,13 +189,13 @@ def train(opt):
     replay_memory = deque(maxlen=opt.replay_memory_size)
     epoch = 0
     while epoch < opt.num_epochs:
-        next_steps = env.get_next_states()
+        next_actions, next_steps = TetrisParams.get_next_states(env)  #! Acciones y estados basados en las posibles acciones disponibles
         # Exploration or exploitation
         epsilon = opt.final_epsilon + (max(opt.num_decay_epochs - epoch, 0) * (
                 opt.initial_epsilon - opt.final_epsilon) / opt.num_decay_epochs)
         u = random()
         random_action = u <= epsilon
-        next_actions, next_states = zip(*next_steps.items())
+        #next_actions, next_states = zip(*next_steps.items())
         next_states = torch.stack(next_states)
         if torch.cuda.is_available():
             next_states = next_states.cuda()
@@ -223,7 +220,10 @@ def train(opt):
             final_score = env.score
             final_tetrominoes = env.tetrominoes
             final_cleared_lines = env.cleared_lines
-            state = env.reset()
+            TetrisParams(env).get_num_lines_cleared()
+            #state = env.reset()
+            env = Tetris()                                              #!
+            state = TetrisParams(env.get_grid_state()).get_state()      #!
             if torch.cuda.is_available():
                 state = state.cuda()
         else:
@@ -278,5 +278,8 @@ def train(opt):
 # execute the following only if this is the calling module
 if __name__ == '__main__':
     #main_game()
-    opt = get_args()
-    train(opt)
+    #opt = get_args()
+    #train(opt)
+    t = Tetris()
+    u = TetrisParams(t.get_grid_state())
+    print(u.get_num_column_with_holes())

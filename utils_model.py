@@ -6,7 +6,7 @@
 """
 
 # import copy function to duplicate the paramters of a class object
-from copy import copy
+from copy import copy, deepcopy
 
 # importing numpy module for evaluating game paramters
 import numpy as np
@@ -16,6 +16,10 @@ from Tetris.global_variables import NUM_COLUMNS, NUM_ROWS, SCORING_VECTOR
 # import the Piece class to be used for type annotation
 from Tetris.piece import Piece
 
+# import the Tetris class to be used as the main game variable
+from Tetris.tetris import Tetris
+
+import torch
 
 # import respective object type for type hint specification
 
@@ -191,6 +195,80 @@ class TetrisParams:
                 -self.num_pits, -self.max_well, -self.num_col_with_holes,
                 -self.row_transitions, -self.col_transitions, self.score_achieved)
 
+    def get_state(self):        #TODO: Revisar que implementaciones sean iguales a las del otro Tetris
+        lines_cleared = self.get_num_lines_cleared()
+        holes = self.get_holes()
+        bumpiness = self.get_bumpiness()
+        height = self.get_aggregate_height()
+        return torch.FloatTensor([lines_cleared, holes, bumpiness, height])
+    
+    def get_next_states(t):
+        pass
+        #TODO: Traducir implementacion de Vicente
+        piece = deepcopy(t.current_piece)
+        shape = piece.shape
+        moves = {}
+        prevscore = t.score
+        
+        # por cada rotacion de la pieza
+        for sh in range(0, len(shape)):
+            # obtener ancho de la pieza
+            X = [i for (i, _) in piece.get_formatted_shape()]
+            width = max(X) - min(X)
+            # obtener offset de la rotacion actual
+            piece.rotation = sh
+            left = 2 - piece.get_left_bound()
+            # iterar desde izquierda a derecha
+            for i in range(0, 10):
+                piece.rotation = 0
+                actions = [ROTATE_KEY] * sh
+                # crear una copia del juego para hacer la simulacion
+                tetris_copy = Tetris()
+                tetris_copy.locked_pos = deepcopy(t.locked_pos)
+                tetris_copy.grid = deepcopy(t.grid)
+                tetris_copy.current_piece = piece
+                tetris_copy.next_piece = piece
+                
+                piece.y = 0
+                piece.x = 5
+
+                if (not piece.in_valid_space(tetris_copy.grid)):
+                    continue
+                # calcular movimientos necesarios (action = left || right)
+                if i < 5:
+                    actions += [LEFT_KEY] * (5-i)
+                else:
+                    actions += [RIGHT_KEY] * (i-5)
+                # hacer pull down (action = space)
+                actions += [PULL_DOWN_KEY]
+                for action in actions:
+                    tetris_copy.play_game(action)
+                    # tetris_copy.current_piece = piece
+                    # tetris_copy.next_piece = piece
+
+                # calcular puntaje generado por las acciones anteriores
+                # score = tetris_copy.score
+                # grid = tetris_copy.set_grid()
+                # calcular altura
+                altura = 20 - piece.y
+                altura = 0 if altura < 0 else altura
+                # print("altura = ", altura)
+                # altura = altura if altura > 0 else 0
+                filas = clear_rows(tetris_copy)
+                transiciones_filas = random.randint(0, 6)
+                transiciones_columnas = random.randint(0, 8)
+                huecos = random.randint(0, 8)
+                pozos = random.randint(0, 8)
+
+                A = (-4.500158825082766, 3.4181268101392694, -3.2178882868487753, -9.348695305445199, -7.899265427351652, -3.3855972247263626)
+                score = altura*A[0] + filas*A[1] #+ transiciones_filas*A[2] + transiciones_columnas*A[3] + huecos*A[4] + pozos*A[5]
+
+                moves[score] = actions
+                # time.sleep(1)
+                # print(score, moves[score], "ALTURA = ", altura)
+        t.score = prevscore
+        print("MAX = ", max(moves.keys()))
+        return moves[max(moves.keys())]
 
 def get_numpy_shape(formatted_shape):
     """
