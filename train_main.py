@@ -1,19 +1,43 @@
+import argparse
 # import os for file-directory modifications and manipulations
 import os
-
 # Local ONLY (directorio para utilizar los nucleos CUDA de mi GPU)
 os.add_dll_directory("C:/Archivos de programa/NVIDIA GPU Computing Toolkit/CUDA/v11.6/bin")
 os.add_dll_directory("C:/Archivos de programa/NVIDIA/zlib123dllx64/dll_x64")
 
+import shutil
+from random import random, randint, sample
+
 # import pickle to save and reload models
 import pickle
 
-# import the python package for Neuroevolution of Augmenting Topologies
-#import neat
+import numpy as np
+import torch
+import torch.nn as nn
+from tensorboardX import SummaryWriter
 
-import tensorflow as tf
-from tensorflow import keras
-from keras import layers
+class DeepQNetwork(nn.Module):
+    def __init__(self):
+        super(DeepQNetwork, self).__init__()
+
+        self.conv1 = nn.Sequential(nn.Linear(4, 64), nn.ReLU(inplace=True))
+        self.conv2 = nn.Sequential(nn.Linear(64, 64), nn.ReLU(inplace=True))
+        self.conv3 = nn.Sequential(nn.Linear(64, 1))
+
+        self._create_weights()
+
+    def _create_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+
+        return x
 
 # import the pygame module for the Game UI
 import pygame
@@ -43,43 +67,22 @@ max_fitness = 0
 # driver method
 def main_game(genomes, config):
     
+    actions = [ROTATE_KEY, RIGHT_KEY, LEFT_KEY, DOWN_KEY]
+
     # define Neural Network Model
     model = keras.Sequential()
     model.add(layers.Dense(18, input_shape=(9,), activation="sigmoid"))
     model.add(layers.Dense(9, activation="sigmoid"))
     model.add(layers.Dense(1, activation="softmax"))
     
-    # use global variable copies for gen_index and max_fitness
-#    global gen_index, max_fitness
-
-    # increment index for generation, every time the main method is called
-#    gen_index += 1
-    # initialize list of genomes
-#    gen = list()
-    # initialize list of tetris variables
-#    tetrises = list()
-    # initialize list of models corresponding to each genome
-#    models = list()
-
-    # iterate through each genome 
-#    for genome_id, genome in genomes:
-        # append model corresponding to the genome
-#        models.append(neat.nn.FeedForwardNetwork.create(genome, config))
-        # append a tetris instance for the genome
-#        tetrises.append(Tetris())
-        # initialize the fitness of the genome as 0
-#        genome.fitness = 0
-        # append the genome to the list
-#        gen.append(genome)
-    
-    tetrises = Tetris()
-    gen = 1
+    t = Tetris()
+    g = 1
     # run until all tetris instances are not over
     while True: #TODO: Definir condicion de salida
         # iterate through each instance of tetris, model and genome
             
         # get list possible moves along with the respective current and future fitness
-        possible_moves_result = try_possible_moves(t, m)
+        possible_moves_result = try_possible_moves(t, model)
         # if list is not empty
         if possible_moves_result:
             # best moves correspond to 0th position because of descending sort
@@ -144,56 +147,136 @@ def main_game(genomes, config):
             # remove genome instance
             gen.pop(gen.index(g))
 
+def get_args():
+    parser = argparse.ArgumentParser(
+        """Implementation of Deep Q Network to play Tetris""")
+    parser.add_argument("--width", type=int, default=10, help="The common width for all images")
+    parser.add_argument("--height", type=int, default=20, help="The common height for all images")
+    parser.add_argument("--block_size", type=int, default=30, help="Size of a block")
+    parser.add_argument("--batch_size", type=int, default=512, help="The number of images per batch")
+    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--gamma", type=float, default=0.99)
+    parser.add_argument("--initial_epsilon", type=float, default=1)
+    parser.add_argument("--final_epsilon", type=float, default=1e-3)
+    parser.add_argument("--num_decay_epochs", type=float, default=2000)
+    parser.add_argument("--num_epochs", type=int, default=2000) # 3000
+    parser.add_argument("--save_interval", type=int, default=1000)
+    parser.add_argument("--replay_memory_size", type=int, default=30000,
+                        help="Number of epoches between testing phases")
+    parser.add_argument("--log_path", type=str, default="tensorboard")
+    parser.add_argument("--saved_path", type=str, default="trained_models")
 
-# method to run the genetic algorithm over the driver method
-def run():
-    # extract details from the config file
-    config = neat.config.Config()
+    args = parser.parse_args()
+    return args
 
-    # directory for storing checkpoints
-#    checkpoint_dir = os.listdir("checkpoints/")
-    # if directory is empty
-#    if not checkpoint_dir:
-        # start new population
-#        pop = neat.Population(config)
-    # if directory is not empty
-#    else:
-        # initialize empty list
-#        checkpoint_list = list()
-        # iterate through each file
-#        for checkpoint in checkpoint_dir:
-            # append to list the indices of the checkpoints
-#            checkpoint_list.append(checkpoint[16:])
-        # descending sort the checkpoint list and get the max value
-#        checkpoint = sorted(checkpoint_list, reverse=True)[0]
-        # restore population from last checkpoint
-#        pop = neat.Checkpointer().restore_checkpoint("checkpoints/neat-checkpoint-" + str(checkpoint))
-        # print which checkpoint is loaded
-#        print("Loaded last checkpoint: ", checkpoint)
 
-    # uses print to output information about the run method
-#    pop.add_reporter(neat.StdOutReporter(True))
-    # gathers and provides the most-fit genomes and info on genome and species fitness and species sizes.
-#    pop.add_reporter(neat.StatisticsReporter())
-    # performs checkpointing, saving and restoring the simulation state.
-#    pop.add_reporter(neat.Checkpointer(generation_interval=1, time_interval_seconds=1200,
-#                                       filename_prefix='checkpoints/neat-checkpoint-'))
-    # find the winner genome by running the main_game method for 20 generations
-    winner = pop.run(main_game, 20)
+def train(opt):
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(123)
+    else:
+        torch.manual_seed(123)
+    if os.path.isdir(opt.log_path):
+        shutil.rmtree(opt.log_path)
+    os.makedirs(opt.log_path)
+    writer = SummaryWriter(opt.log_path)
+    env = Tetris(width=opt.width, height=opt.height, block_size=opt.block_size)
+    model = DeepQNetwork()
+    optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr)
+    criterion = nn.MSELoss()
 
-    # display the characteristics of the winner genome
-#    print('\n\nBest genome: {!s}'.format(winner))
-    # create a file for winner model
-#    with open("winner.pickle", 'wb') as model_file:
-        # save the model
-#        pickle.dump(winner, model_file)
+    state = env.reset()
+    if torch.cuda.is_available():
+        model.cuda()
+        state = state.cuda()
+
+    replay_memory = deque(maxlen=opt.replay_memory_size)
+    epoch = 0
+    while epoch < opt.num_epochs:
+        next_steps = env.get_next_states()
+        # Exploration or exploitation
+        epsilon = opt.final_epsilon + (max(opt.num_decay_epochs - epoch, 0) * (
+                opt.initial_epsilon - opt.final_epsilon) / opt.num_decay_epochs)
+        u = random()
+        random_action = u <= epsilon
+        next_actions, next_states = zip(*next_steps.items())
+        next_states = torch.stack(next_states)
+        if torch.cuda.is_available():
+            next_states = next_states.cuda()
+        model.eval()
+        with torch.no_grad():
+            predictions = model(next_states)[:, 0]
+        model.train()
+        if random_action:
+            index = randint(0, len(next_steps) - 1)
+        else:
+            index = torch.argmax(predictions).item()
+
+        next_state = next_states[index, :]
+        action = next_actions[index]
+
+        reward, done = env.step(action, render=True)
+
+        if torch.cuda.is_available():
+            next_state = next_state.cuda()
+        replay_memory.append([state, reward, next_state, done])
+        if done:
+            final_score = env.score
+            final_tetrominoes = env.tetrominoes
+            final_cleared_lines = env.cleared_lines
+            state = env.reset()
+            if torch.cuda.is_available():
+                state = state.cuda()
+        else:
+            state = next_state
+            continue
+        if len(replay_memory) < opt.replay_memory_size / 10:
+            continue
+        epoch += 1
+        batch = sample(replay_memory, min(len(replay_memory), opt.batch_size))
+        state_batch, reward_batch, next_state_batch, done_batch = zip(*batch)
+        state_batch = torch.stack(tuple(state for state in state_batch))
+        reward_batch = torch.from_numpy(np.array(reward_batch, dtype=np.float32)[:, None])
+        next_state_batch = torch.stack(tuple(state for state in next_state_batch))
+
+        if torch.cuda.is_available():
+            state_batch = state_batch.cuda()
+            reward_batch = reward_batch.cuda()
+            next_state_batch = next_state_batch.cuda()
+
+        q_values = model(state_batch)
+        model.eval()
+        with torch.no_grad():
+            next_prediction_batch = model(next_state_batch)
+        model.train()
+
+        y_batch = torch.cat(
+            tuple(reward if done else reward + opt.gamma * prediction for reward, done, prediction in
+                  zip(reward_batch, done_batch, next_prediction_batch)))[:, None]
+
+        optimizer.zero_grad()
+        loss = criterion(q_values, y_batch)
+        loss.backward()
+        optimizer.step()
+
+        print("Epoch: {}/{}, Action: {}, Score: {}, Tetrominoes {}, Cleared lines: {}".format(
+            epoch,
+            opt.num_epochs,
+            action,
+            final_score,
+            final_tetrominoes,
+            final_cleared_lines))
+        writer.add_scalar('Train/Score', final_score, epoch - 1)
+        writer.add_scalar('Train/Tetrominoes', final_tetrominoes, epoch - 1)
+        writer.add_scalar('Train/Cleared lines', final_cleared_lines, epoch - 1)
+
+        if epoch > 0 and epoch % opt.save_interval == 0:
+            torch.save(model, "{}/tetris_{}".format(opt.saved_path, epoch))
+
+    torch.save(model, "{}/tetris".format(opt.saved_path))
 
 
 # execute the following only if this is the calling module
 if __name__ == '__main__':
-    # name of directory containing this file
-    local_dir = os.path.dirname(__file__)
-    # path to the config file
-#    config_path = os.path.join(local_dir, 'config.txt')
-    # call run method with config file path
-    run()
+    #main_game()
+    opt = get_args()
+    train(opt)
