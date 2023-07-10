@@ -111,6 +111,7 @@ def calculate_possible_moves(t: Tetris):
             tetris_copy.grid = deepcopy(t.grid)
             tetris_copy.current_piece = piece
             tetris_copy.next_piece = piece
+            tetris_copy.score = prevscore
             
             piece.y = 3
             t.current_piece.y=3
