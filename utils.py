@@ -2,6 +2,7 @@ from Tetris.tetris import Tetris
 from copy import deepcopy
 from Tetris.global_variables import LEFT_KEY, RIGHT_KEY, DOWN_KEY, PULL_DOWN_KEY, ROTATE_KEY
 import random
+#from utils_model import *
 import time
 
 
@@ -111,7 +112,8 @@ def calculate_possible_moves(t: Tetris):
             tetris_copy.current_piece = piece
             tetris_copy.next_piece = piece
             
-            piece.y = 0
+            piece.y = 1
+            t.current_piece.y=2
             piece.x = 5
 
             if (not piece.in_valid_space(tetris_copy.grid)):
@@ -136,15 +138,13 @@ def calculate_possible_moves(t: Tetris):
             altura = 20 - piece.y
             altura = 0 if altura < 0 else altura
             # print("altura = ", altura)
-            alfa = calculate_highest_peak(tetris_copy,altura)
-            alfa = 0 if alfa < 0 else alfa
+            alfa = calculate_highest_peak(tetris_copy,altura)##falta
             beta = clear_rows(tetris_copy)
             gamma = calculate_Trans_rows(tetris_copy)
             delta = calculate_Trans_columns(tetris_copy)
             epsylon = calculate_num_hol(tetris_copy)
             zetta = calculate_num_pozos(tetris_copy)
             #print("num pozo es: ",zetta)
-
             filas = clear_rows(tetris_copy)
             transiciones_filas = random.randint(0, 6)
             transiciones_columnas = random.randint(0, 8)
