@@ -8,16 +8,16 @@ import time
 
 #calcular betta
 def clear_rows(t: Tetris):
-    # set initial number of cleared lines as 0
-    num_cleared_rows = 0
-    # check for each row
-    for i in range(len(t.grid)):
-        # if any block is empty skip row
-        if (0, 0, 0) in t.grid[i]:
-            continue
-
-        # if row is complete then increment number of cleared lines
-        num_cleared_rows += 1
+    matrix = t.get_grid_state()
+    contador=0
+    num_cleared_rows=0
+    for i in range(len(matrix)):
+        contador=0
+        for j in range(len(matrix[i])):
+            if(matrix[i][j]==1):contador+=1
+            else: break
+            if(contador==10):num_cleared_rows+=1
+        contador+=1
     return num_cleared_rows
 
 def calculate_Tfilas():
@@ -112,8 +112,8 @@ def calculate_possible_moves(t: Tetris):
             tetris_copy.current_piece = piece
             tetris_copy.next_piece = piece
             
-            piece.y = 1
-            t.current_piece.y=2
+            piece.y = 3
+            t.current_piece.y=3
             piece.x = 5
 
             if (not piece.in_valid_space(tetris_copy.grid)):
@@ -150,6 +150,7 @@ def calculate_possible_moves(t: Tetris):
             transiciones_columnas = random.randint(0, 8)
             huecos = random.randint(0, 8)
             pozos = random.randint(0, 8)
+            if (beta != 0): print(beta)
 
             A = (-4.500158825082766, 3.4181268101392694, -3.2178882868487753, -9.348695305445199, -7.899265427351652, -3.3855972247263626)
             
@@ -158,7 +159,7 @@ def calculate_possible_moves(t: Tetris):
             moves[score] = actions
             # time.sleep(1)
             #print("ALTURA = ", altura)
-            print ("score es",score)
+            # print ("score es",score)
     t.score = prevscore
     print("MAX = ", max(moves.keys()))
     return moves[max(moves.keys())]
