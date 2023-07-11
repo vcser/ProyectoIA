@@ -180,7 +180,7 @@ def calculate_possible_moves(t: Tetris):
                     tetris_copy.play_game(action)
                 states[t].append(tetris_copy)
     
-    
+
     scores = []
     for state in states.keys():
         score = calculate_score(state)
@@ -222,3 +222,4 @@ def calculate_score(tetris_copy: Tetris):
     A = (-4.500158825082766, 3.4181268101392694, -3.2178882868487753, -9.348695305445199, -7.899265427351652, -3.3855972247263626)
     
     score = alfa*A[0] + beta*A[1] + gamma*A[2] + delta*A[3] + epsylon*A[4] + zetta*A[5]
+    return score
