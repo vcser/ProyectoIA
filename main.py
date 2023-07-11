@@ -4,7 +4,6 @@ import pygame
 from Tetris.tetris import Tetris
 from Tetris.global_variables import *
 from utils import calculate_possible_moves
-from dfs import DFS
 
 # initialize pygame module
 pygame.init()
